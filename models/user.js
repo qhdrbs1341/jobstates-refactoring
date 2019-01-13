@@ -1,3 +1,5 @@
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
 module.exports = (sequelize,DataTypes) => (
     sequelize.define('user',{
         snsId:{
@@ -12,7 +14,7 @@ module.exports = (sequelize,DataTypes) => (
             }
         },
         nick:{
-            type: DataTypes.STRING(20),
+            type: DataTypes.STRING(30),
             allowNull: true,
         },
         profile:{
@@ -43,10 +45,42 @@ module.exports = (sequelize,DataTypes) => (
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: true
+        },
+        photoKey:{
+            type: DataTypes.TEXT,
+            allowNull: true
+        },
+        userKey:{
+            type: DataTypes.TEXT,
+            allowNull: true
+        },
+        name: {
+            type: DataTypes.TEXT,
+            allowNull: true
+        },
+        subscription: {
+            type: DataTypes.TEXT,
+            allowNull: true
         }
     },{
         timestamps: true,
         charset: 'utf8',
-        collate: 'utf8_general_ci'
+        collate: 'utf8_general_ci',
+        hooks : {
+            beforeDestroy: (user,err) => {
+                console.log("이미지를 삭제합니다.")
+                const oldUser = user._previousDataValues;
+                if(oldUser.photoKey != null){
+                    const params = {
+                        Bucket: 'jobstates',
+                        Key: oldUser.photoKey
+                        }
+                    s3.deleteObject(params, function (err, data) {
+                      if (err) console.log(err, err.stack)
+                      else console.log(data)
+                    })
+                }
+            }
+        }
     })
 )

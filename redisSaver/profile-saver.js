@@ -2,7 +2,7 @@ require('dotenv').config();
 const redis = require('redis');
 // const redisPool = require('../redisConnection/pool').redisPool();
 const {User, Project, Education, Experience, HaveTech, FavoriteTech, FavoriteCategory} = require('../models/index');
-exports.profileSaver = async(userId) => {
+exports.profileSaver = async (userId) => {
     try{
         const client = redis.createClient({
             host: process.env.REDIS_HOST,
@@ -19,7 +19,9 @@ const exUser = await User.find({where: { id: userId},
      profile: exUser.profile,
      newUser: exUser.newUser,
      nick: exUser.nick,
+     name: exUser.name,
      photo: exUser.photo,
+     photoKey: exUser.photoKey,
      email: exUser.email,
      github: exUser.github,
      blog: exUser.blog,
@@ -31,7 +33,9 @@ const exUser = await User.find({where: { id: userId},
      favoriteTech: exUser.favoriteTeches.map(r => r.title),
      favoriteCategory: exUser.favoriteCategories.map(r => r.title)
  };
+ await client.hdel(userId,'profile');
 await client.hmset(userId,'profile',JSON.stringify(data));
+await client.quit();
 return data;
     }catch(err){
         console.log(err);

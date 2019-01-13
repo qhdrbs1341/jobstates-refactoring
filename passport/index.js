@@ -1,8 +1,12 @@
 const kakao = require('./kakaoStrategy');
-const facebook = require('./facebookStrategy');
 const naver = require('./naverStrategy');
+const google = require('./googleStrategy');
+const github = require('./githubStrategy');
+const jwt = require('./jwt');
 module.exports=(passport)=>{
     kakao(passport);
-    facebook(passport);
+    google(passport);
     naver(passport);
+    github(passport);
+    jwt(passport);
 }
