@@ -19,10 +19,18 @@ module.exports = (sequelize, DataTypes) => (
         provider: {
             type: DataTypes.STRING(20),
             allowNull: false
+        },
+        status: {
+            type: DataTypes.STRING(20),
+            allowNull: true
+        },
+        logoKey: {
+            type: DataTypes.TEXT,
+            allowNull: true
         }
     },{
         timestamps: true,
         charset: 'utf8',
-        collate: 'utf8_general_ci'
+        collate: 'utf8_general_ci',
     })
 )

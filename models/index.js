@@ -2,7 +2,7 @@ const path = require('path');
 const Sequelize = require('sequelize');
 require('dotenv').config();
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname , '/../config/config.json'))[env];
+const config = require(path.join(__dirname , '/../config/config'))[env];
 const db = {};
 
 const sequelize = new Sequelize(
@@ -21,7 +21,8 @@ const sequelize = new Sequelize(
     pool:{
       max: 20,
       idle: 3000
-    }
+    },
+    logging: false
   },
 )
 
@@ -53,8 +54,8 @@ db.Project.belongsTo(db.User);
 db.User.hasMany(db.Experience);
 db.Experience.belongsTo(db.User);
 
-db.User.belongsToMany(db.Company, {through: 'UserCompany'});
-db.Company.belongsToMany(db.User, {through: 'UserCompany'});
+// db.User.belongsToMany(db.Company, {through: 'UserCompany'});
+// db.Company.belongsToMany(db.User, {through: 'UserCompany'});
 
 db.User.belongsToMany(db.FavoriteCategory, {through: 'UserFavoriteCategory'});
 db.FavoriteCategory.belongsToMany(db.User, {through: 'UserFavoriteCategory'});

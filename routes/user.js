@@ -1,36 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const {User, Project, Education, Experience, HaveTech, FavoriteTech, FavoriteCategory} = require('../models/index');
-const {profileRead} = require('../middleware/redis-check');
-const {profileSaver} = require('../redisSaver/profile-saver')
+const {profileRead,verifyToken} = require('./middlewares');
+const {profileSaver} = require('../redisSaver/profile-saver');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
 router.get('/profile',profileRead,async (req,res,next)=>{
     try{
-    // const exUser = await User.find({where: { id: req.body.id}, 
-    //     include: [{model: HaveTech, attributes: ['title']},{model: FavoriteTech, attributes: ['title']},
-    // {model: FavoriteCategory, attributes: ['title']},{model: Project},{model: Education},{model: Experience}]});
-    //  const data = {
-    //      id: exUser.id,
-    //      snsId: exUser.snsId,
-    //      profile: exUser.profile,
-    //      newUser: exUser.newUser,
-    //      nick: exUser.nick,
-    //      photo: exUser.photo,
-    //      email: exUser.email,
-    //      github: exUser.github,
-    //      blog: exUser.blog,
-    //      phone: exUser.phone,
-    //      education: exUser.education,
-    //      project: exUser.projects,
-    //      experience: exUser.experiences,
-    //      haveTech: exUser.haveTeches.map(r => r.title),
-    //      favoriteTech: exUser.favoriteTeches.map(r => r.title),
-    //      favoriteCategory: exUser.favoriteCategories.map(r => r.title)
-    //  };
 
      //레디스 profile에 저장
     // await client.hmset(req.body.id,'profile',data);
-    const data = profileSaver(req.body.id);
-    res.json(data);
+    const data = await profileSaver(req.user.id);
+    res.json({
+        code:200,
+        data:data});
     }catch(err){
         next(err);
     }
@@ -38,18 +22,37 @@ router.get('/profile',profileRead,async (req,res,next)=>{
 
 router.post('/profile',async (req,res,next)=>{
     try{
-   await User.update({
+        await User.addHook('beforeUpdate','user',async (user,err)=>{
+            const oldUser = user._previousDataValues;
+            const newUser = user.dataValues;
+            if(oldUser.photoKey != null && oldUser.photoKey !== newUser.photoKey){
+                const params = {
+                    Bucket: 'jobstates',
+                    Key: oldUser.photoKey
+                  }
+                  await s3.deleteObject(params, function (err, data) {
+                    if (err) console.log(err, err.stack)
+                    else console.log(data)
+                  })
+            } 
+        })
+    await User.update({
         email: req.body.email,
         profile: req.body.profile,
         blog: req.body.blog,
         github: req.body.github,
         phone: req.body.phone,
         photo: req.body.photo,
+        photoKey: req.body.photoKey,
+        name: req.body.name,
         newUser: false
-    },{where: {id: req.body.id}})
+    },{where: {id: req.user.id},individualHooks: true, plain: true})
 
-    const data = profileSaver(req.body.id);
-    res.json(data);
+    await User.removeHook('beforeUpdate','user');
+    const data = await profileSaver(req.user.id);
+    res.json({
+        code:200,
+        data:data});
     }catch(err){
         next(err);
     }
@@ -61,11 +64,13 @@ router.post('/project',async (req,res,next)=>{
         term: req.body.term,
         title: req.body.title,
         description: req.body.description,
-        userId: req.body.id,
+        userId: req.user.id,
     })
 
-    const data = profileSaver(req.body.id);
-    res.json(data);
+    const data = await profileSaver(req.user.id);
+    res.json({
+        code:200,
+        data:data});
 
     }catch(err){
         next(err);
@@ -82,8 +87,10 @@ router.patch('/project',async(req,res,next)=>{
 
     //const updatedProject = await Project.find({where: {id: req.body.id}});
 
-    const data = profileSaver(req.body.id);
-    res.json(data);
+    const data = await profileSaver(req.user.id);
+    res.json({
+        code:200,
+        data:data});
 
     }catch(err){
         next(err);
@@ -93,8 +100,10 @@ router.patch('/project',async(req,res,next)=>{
 router.delete('/project',async(req,res,next)=>{
     try{
     await Project.destroy({where: {id: req.body.id}});
-    const data = profileSaver(req.body.id);
-    res.json(data);
+    const data = await profileSaver(req.user.id);
+    res.json({
+        code:200,
+        data:data});
     }catch(err){
         next(err);
     }
@@ -106,10 +115,12 @@ router.post('/education',async (req,res,next)=>{
         term: req.body.term,
         organization: req.body.organization,
         content: req.body.content,
-        userId: req.body.id
+        userId: req.user.id
     })
-    const data = profileSaver(req.body.id);
-    res.json(data);
+    const data = await profileSaver(req.user.id);
+    res.json({
+        code:200,
+        data:data});
     }catch(err){
         next(err);
     }
@@ -123,8 +134,10 @@ router.patch('/education',async(req,res,next)=>{
             content: req.body.content
         },{where: {id: req.body.id}})
         //const updatedEducation = await Education.find({where: {id: req.body.id}});
-        const data = profileSaver(req.body.id);
-        res.json(data);
+        const data = await profileSaver(req.user.id);
+        res.json({
+            code:200,
+            data:data});
     }catch(err){
         next(err)
     }
@@ -135,8 +148,10 @@ router.delete('/education',async(req,res,next)=>{
         await Education.destroy({
             where: {id: req.body.id}
         })
-        const data = profileSaver(req.body.id);
-        res.json(data);
+        const data = await profileSaver(req.user.id);
+        res.json({
+            code:200,
+            data:data});
     }catch(err){
         next(err);
     }
@@ -149,10 +164,12 @@ router.post('/experience',async (req,res,next)=>{
         title: req.body.title,
         content: req.body.content,
         description: req.body.description,
-        userId: req.body.id
+        userId: req.user.id
     })
-    const data = profileSaver(req.body.id);
-    res.json(data);
+    const data = await profileSaver(req.user.id);
+    res.json({
+        code:200,
+        data:data});
     }catch(err){
         next(err);
     }
@@ -167,8 +184,10 @@ router.patch('/experience',async(req,res,next)=>{
             description: req.body.description
         },{where: {id: req.body.id}});
         //const updatedExperience = await Experience.find({where: {id: req.body.id}});
-        const data = profileSaver(req.body.id);
-        res.json(data);
+        const data = await profileSaver(req.user.id);
+        res.json({
+            code:200,
+            data:data});
     }catch(err){
         next(err);
     }
@@ -177,8 +196,10 @@ router.patch('/experience',async(req,res,next)=>{
 router.delete('/experience',async(req,res,next)=>{
     try{
         await Experience.destroy({where: {id: req.body.id}});
-        const data = profileSaver(req.body.id);
-        res.json(data);
+        const data = await profileSaver(req.user.id);
+        res.json({
+            code:200,
+            data:data});
     }catch(err){
         next(err);
     }
@@ -194,11 +215,13 @@ router.post('/havetech',async(req,res,next)=>{
               })
             )
           )
-          const user = await User.find({where: {id: req.body.id}});
+          const user = await User.find({where: {id: req.user.id}});
           await user.setHaveTeches(result.map(r => r[0]));
 
-          const data = profileSaver(req.body.id);
-          res.json(data);
+          const data = await profileSaver(req.user.id);
+          res.json({
+            code:200,  
+            data:data});
     }catch(err){
         next(err);
     }
@@ -214,11 +237,13 @@ router.post('/favoritetech',async(req,res,next)=>{
               })
             )
           )
-        const user = await User.find({where: {id: req.body.id}});
+        const user = await User.find({where: {id: req.user.id}});
         await user.setFavoriteTeches(result.map(r => r[0]));
 
-        const data = profileSaver(req.body.id);
-        res.json(data);
+        const data = await profileSaver(req.user.id);
+        res.json({
+            code:200,
+            data:data});
     }catch(err){
         next(err);
     }
@@ -234,11 +259,13 @@ router.post('/favoritecategory',async(req,res,next)=>{
               })
             )
           )
-        const user = await User.find({where: {id: req.body.id}});
+        const user = await User.find({where: {id: req.user.id}});
         await user.setFavoriteCategories(result.map(r => r[0]));
         
-        const data = profileSaver(req.body.id);
-        res.json(data);
+        const data = await profileSaver(req.user.id);
+        res.json({
+            code:200,
+            data:data});
     }catch(err){
         next(err);
     }

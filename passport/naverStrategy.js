@@ -9,13 +9,15 @@ module.exports = (passport)=>{
         callbackURL: '/auth/naver/callback'
     },async(accessToken, refreshToken, profile, done)=>{
         try{
-            const exUser = await User.find({where: {snsId: profile._json.id, provider: 'facebook'}});
+            console.log(profile);
+            const exUser = await User.find({where: {snsId: profile.id, provider: 'naver'}});
             if(exUser){
                 done(null,exUser);
             }else{
                 const newUser = await User.create({
-                    snsId: profile._json.id,
-                    nick: profile._json.name,
+                    snsId: profile.id,
+                    nick: profile.displayName,
+                    profile: profile._json.profile_image,
                     provider: 'naver'
                 })
                 done(null,newUser);
