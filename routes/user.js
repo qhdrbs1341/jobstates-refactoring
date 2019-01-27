@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const {User, Project, Education, Experience, HaveTech, FavoriteTech, FavoriteCategory} = require('../models/index');
-const {profileRead,verifyToken} = require('./middlewares');
+const {profileRead} = require('./middlewares');
 const {profileSaver} = require('../redisSaver/profile-saver');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 
 router.get('/profile',profileRead,async (req,res,next)=>{
     try{
-
      //레디스 profile에 저장
     // await client.hmset(req.body.id,'profile',data);
     const data = await profileSaver(req.user.id);
@@ -270,5 +269,4 @@ router.post('/favoritecategory',async(req,res,next)=>{
         next(err);
     }
 })
-
 module.exports = router;

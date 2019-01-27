@@ -1,0 +1,48 @@
+version: '3.6'
+
+services:
+
+  # Backend API
+  distributor:
+    build: ./
+    command: node ./services/distributor.js
+    ports:
+      - "3000:3000"
+    working_dir: /Users/bongkyunpark/workspace/jobstates-refactor
+
+  user: 
+    build: ./ # Docker File 경로
+    command: node ./services/user.js
+    ports:
+      - "3001"
+      - "8001:8001"
+    environment:
+      PORT: 3001
+      TCP: 8001
+    working_dir: /Users/bongkyunpark/workspace/jobstates-refactor
+    volumes:
+      - ./:/Users/bongkyunpark/workspace/jobstates-refactor/
+    
+  schedule: 
+    build: ./ # Docker File 경로
+    command: node ./services/schedule.js
+    ports:
+      - "3002"
+      - "8002:8002"
+    environment:
+      PORT: 3002
+      TCP: 8002
+    working_dir: /Users/bongkyunpark/workspace/jobstates-refactor
+    volumes:
+      - ./:/Users/bongkyunpark/workspace/jobstates-refactor/
+
+  # Nginx
+  load-balancer:
+    build: nginx/
+    ports:
+      - "80:80"
+    links:
+      - user
+      - schedule
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
