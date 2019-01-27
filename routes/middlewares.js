@@ -6,11 +6,11 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const webpush = require('web-push');
 
-webpush.setGCMAPIKey(process.env.FCM_KEY);
+webpush.setGCMAPIKey('AAAAnjJRcqE:APA91bFt2j8f6Mihu2lL2DxCYKotZBd9lrCMCNIlx0aPx1rEETJwS8FJycfwt0oimHZ7Ir5ickSuetIgCrEhs2cCs0IPoiM5Jw97NLHZGGLlTMLyPhBe0ZSPLcwmTgz35iWXUVmZyM4P');
 webpush.setVapidDetails(
   'mailto:qhdrbs1341@gmail.com',
-  process.env.VAPID_PUBLIC,
-  process.env.VAPID_PRIVATE
+  'BPiRrotC_z0igSuYrcs5HqPAeyUxdkb5Y5Yg4m9kibrpz_VEpR7iqQf3bZ9PU-GKwb8IBBGwFv_j1x97gsVb8bQ',
+  '86XGjxV6FEbK2246knwjGMnP9cs5m4u5wnKwWUJ1R7k'
 )
 exports.verifyToken = async (req,res,next)=>{
     try{

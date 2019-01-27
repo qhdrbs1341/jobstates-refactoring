@@ -6,6 +6,18 @@ const {scheduleRead} = require('./middlewares');
 const {scheduleSaver} = require('../redisSaver/schedule-saver');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
+const {sendMessage} = require('../helpers/tcp_manger');
+
+router.get('/test',(req,res,next)=>{
+    console.log("send to User Test");
+    setInterval(()=>{
+        if(sendMessage('/user',{method: 'TEST', message: 'hello'})){
+            console.log("보내기 성공")
+        }else{
+            console.log("연결된 TCP 서버가 없습니다.")
+        };
+    },3000)
+})
 
 //유저의 스케쥴 정보 모두 검색
 router.get('/',scheduleRead,async (req,res,next)=>{
